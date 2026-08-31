@@ -35,6 +35,11 @@ if [[ "$PROJECT_DIR" == *$'\n'* || "$PROJECT_DIR" == *'"'* ]]; then
   exit 1
 fi
 
+# Escape characters that systemd treats specially in an ExecStart argument.
+SYSTEMD_START_SCRIPT="${START_SCRIPT//\\/\\\\}"
+SYSTEMD_START_SCRIPT="${SYSTEMD_START_SCRIPT//\$/\$\$}"
+SYSTEMD_START_SCRIPT="${SYSTEMD_START_SCRIPT//%/%%}"
+
 # Import the application before installing the service so configuration or
 # dependency errors are reported immediately.
 (
@@ -51,8 +56,7 @@ After=network.target
 Type=simple
 User=$RUN_USER
 Group=$RUN_GROUP
-WorkingDirectory="$PROJECT_DIR"
-ExecStart=/bin/bash "$START_SCRIPT"
+ExecStart=/bin/bash "$SYSTEMD_START_SCRIPT"
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
