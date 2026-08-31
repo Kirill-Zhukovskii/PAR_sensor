@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f5">
+  <title>PAR Sensor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="card">
+    <h1>PAR Sensor</h1>
+    <section class="reading" aria-live="polite">
+      <div id="value" class="value">—</div>
+      <div id="unit" class="unit">µmol/m²·s</div>
+    </section>
+    <button id="readButton" type="button">Read</button>
+    <p id="status" class="status">Ready</p>
+  </main>
+
+  <script>
+    const button = document.getElementById("readButton"); const value = document.getElementById("value"); const unit = document.getElementById("unit"); const status = document.getElementById("status"); button.addEventListener("click", async () => { button.disabled = true; status.textContent = "Reading…"; try { const response = await fetch("/api/read", { method: "POST", cache: "no-store" }); const data = await response.json(); if (!response.ok || !data.ok) throw new Error(data.error || "Sensor read failed"); value.textContent = data.value; unit.textContent = data.unit; status.textContent = "Updated just now"; } catch (error) { status.textContent = error.message; } finally { button.disabled = false; } });
+  </script>
+</body>
+</html>
