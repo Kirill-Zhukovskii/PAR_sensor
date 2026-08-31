@@ -7,6 +7,7 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV_PYTHON="$PROJECT_DIR/.venv/bin/python"
 ENV_FILE="$PROJECT_DIR/.env"
+START_SCRIPT="$PROJECT_DIR/scripts/start.sh"
 SERVICE_NAME="par-sensor.service"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME"
 RUN_USER="${SUDO_USER:-$(id -un)}"
@@ -21,6 +22,11 @@ fi
 if [[ ! -f "$ENV_FILE" ]]; then
   echo "Error: $ENV_FILE was not found." >&2
   echo "Copy .env.example to .env and check its settings first." >&2
+  exit 1
+fi
+
+if [[ ! -f "$START_SCRIPT" ]]; then
+  echo "Error: $START_SCRIPT was not found." >&2
   exit 1
 fi
 
@@ -46,10 +52,7 @@ Type=simple
 User=$RUN_USER
 Group=$RUN_GROUP
 WorkingDirectory="$PROJECT_DIR"
-Environment=WEB_HOST=0.0.0.0
-Environment=WEB_PORT=8000
-EnvironmentFile="$ENV_FILE"
-ExecStart="$VENV_PYTHON" -m uvicorn app.main:app --host \${WEB_HOST} --port \${WEB_PORT}
+ExecStart=/bin/bash "$START_SCRIPT"
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
@@ -60,6 +63,7 @@ WantedBy=multi-user.target
 EOF_SERVICE
 
 sudo systemctl daemon-reload
+sudo systemd-analyze verify "$SERVICE_FILE"
 sudo systemctl enable --now "$SERVICE_NAME"
 
 echo
