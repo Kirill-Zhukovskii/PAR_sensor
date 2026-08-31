@@ -18,13 +18,12 @@ RUN_USER="${SUDO_USER:-$USER}"
 RUN_GROUP="$(id -gn "$RUN_USER")"
 
 sudo apt-get update
-sudo apt-get install -y python3-venv python3-pip avahi-daemon
+sudo apt-get install -y python3-venv python3-pip avahi-daemon i2c-tools
 
 python3 -m venv "$PROJECT_DIR/.venv"
 "$PROJECT_DIR/.venv/bin/python" -m pip install --upgrade pip
 "$PROJECT_DIR/.venv/bin/pip" install -r "$PROJECT_DIR/requirements.txt"
 
-sudo usermod -aG dialout "$RUN_USER"
 sudo hostnamectl set-hostname "${DEVICE_HOSTNAME:-par-sensor}"
 sudo systemctl enable --now avahi-daemon
 
@@ -57,5 +56,3 @@ echo "Installed and started $SERVICE_NAME"
 echo "Open: http://${DEVICE_HOSTNAME:-par-sensor}.local:${WEB_PORT:-8000}"
 echo "Service status: sudo systemctl status $SERVICE_NAME"
 echo "Logs: journalctl -u $SERVICE_NAME -f"
-echo
-echo "If serial access still fails, reboot once so the dialout group change is guaranteed to apply."
